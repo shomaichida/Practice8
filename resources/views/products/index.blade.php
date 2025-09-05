@@ -64,7 +64,6 @@
             </td>
             <td class="d-flex gap-2">
               <a href="{{ route('products.show',$p) }}" class="btn btn-sm btn-info">詳細</a>
-              <a href="{{ route('products.edit',$p) }}" class="btn btn-sm btn-warning">編集</a>
               <form method="POST" action="{{ route('products.destroy',$p) }}"
                     onsubmit="return confirm('削除してよろしいですか？');">
                 @csrf @method('DELETE')

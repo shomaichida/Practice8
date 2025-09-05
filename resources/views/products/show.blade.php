@@ -15,7 +15,6 @@
     @if($product->img_path)
     <img src="{{ asset('storage/'.$product->img_path) }}" class="img-fluid mb-3" alt="">
     @endif
-    <a href="{{ route('products.edit',$product) }}" class="btn btn-warning">編集</a>
     <a href="{{ route('products.index') }}" class="btn btn-secondary">戻る</a>
   </div>
 </div>
