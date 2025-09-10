@@ -2,9 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Product;
-use App\Models\Company;
-use Illuminate\Http\Request;
+use App\Http\Requests\ProductStoreRequest;
+use App\Http\Requests\ProductUpdateRequest;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
@@ -75,29 +74,27 @@ class ProductController extends Controller
     }
 
     /* ===== 登録 ===== */
-    public function store(Request $request)
-    {
-        $validated = $request->validate($this->rules(), $this->messages());
+    public function store(ProductStoreRequest $request)
+{
+    $validated = $request->validated();
 
-        DB::beginTransaction();
-        try {
-            $product = new Product($validated);
+    DB::beginTransaction();
+    try {
+        $product = new Product($validated);
 
-            if ($request->hasFile('img')) {
-                $product->img_path = $request->file('img')->store('products', 'public');
-            }
-
-            $product->save();
-
-            DB::commit();
-            return redirect()->route('products.index')->with('success', '商品を登録しました。');
-        } catch (\Throwable $e) {
-            DB::rollBack();
-            return back()
-                ->withErrors(['error' => '商品登録に失敗しました。'])
-                ->withInput();
+        if ($request->hasFile('img')) {
+            $product->img_path = $request->file('img')->store('products', 'public');
         }
+
+        $product->save();
+        DB::commit();
+
+        return redirect()->route('products.index')->with('success', '商品を登録しました。');
+    } catch (\Throwable $e) {
+        DB::rollBack();
+        return back()->withErrors(['error' => '商品登録に失敗しました。'])->withInput();
     }
+}
 
     /* ===== 詳細 ===== */
     public function show(Product $product)
@@ -114,38 +111,34 @@ class ProductController extends Controller
     }
 
     /* ===== 更新（Step8で使用予定） ===== */
-    public function update(Request $request, Product $product)
-    {
-        $validated = $request->validate($this->rules(), $this->messages());
+    public function update(ProductUpdateRequest $request, Product $product)
+{
+    $validated = $request->validated();
 
-        DB::beginTransaction();
-        try {
-            // 新しい画像が来たら置き換え
-            if ($request->hasFile('img')) {
-                if ($product->img_path) {
-                    Storage::disk('public')->delete($product->img_path);
-                }
-                $product->img_path = $request->file('img')->store('products', 'public');
+    DB::beginTransaction();
+    try {
+        if ($request->hasFile('img')) {
+            if ($product->img_path) {
+                Storage::disk('public')->delete($product->img_path);
             }
-
-            $product->fill([
-                'product_name' => $validated['product_name'],
-                'company_id'   => $validated['company_id'],
-                'price'        => $validated['price'],
-                'stock'        => $validated['stock'],
-                'comment'      => $validated['comment'] ?? null,
-            ])->save();
-
-            DB::commit();
-            return redirect()->route('products.show', $product)
-                ->with('success', '商品を更新しました。');
-        } catch (\Throwable $e) {
-            DB::rollBack();
-            return back()
-                ->withErrors(['error' => '商品更新に失敗しました。'])
-                ->withInput();
+            $product->img_path = $request->file('img')->store('products', 'public');
         }
+
+        $product->fill([
+            'product_name' => $validated['product_name'],
+            'company_id'   => $validated['company_id'],
+            'price'        => $validated['price'],
+            'stock'        => $validated['stock'],
+            'comment'      => $validated['comment'] ?? null,
+        ])->save();
+
+        DB::commit();
+        return redirect()->route('products.show', $product)->with('success', '商品を更新しました。');
+    } catch (\Throwable $e) {
+        DB::rollBack();
+        return back()->withErrors(['error' => '商品更新に失敗しました。'])->withInput();
     }
+}
 
     /* ===== 削除 ===== */
     public function destroy(Product $product)
