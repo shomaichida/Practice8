@@ -27,9 +27,4 @@ class ProductUpdateRequest extends FormRequest
     {
         return (new ProductStoreRequest)->messages();
     }
-
-    public function attributes(): array
-    {
-        return (new ProductStoreRequest)->attributes();
-    }
 }

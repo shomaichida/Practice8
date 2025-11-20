@@ -4,9 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\Product;
 use App\Models\Company;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Http\Request;
 use App\Http\Requests\ProductStoreRequest;
 use App\Http\Requests\ProductUpdateRequest;
 
