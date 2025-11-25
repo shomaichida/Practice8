@@ -12,40 +12,6 @@ use App\Http\Requests\ProductUpdateRequest;
 
 class ProductController extends Controller
 {
-    /* ===== 共通：バリデーション ===== */
-    private function rules(): array
-    {
-        return [
-            'product_name' => 'required|string|max:255',
-            'company_id'   => 'required|exists:companies,id',
-            'price'        => 'required|integer|min:0',
-            'stock'        => 'required|integer|min:0',
-            'comment'      => 'nullable|string|max:10000',
-            'img'          => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120', // 5MB
-        ];
-    }
-
-    private function messages(): array
-    {
-        return [
-            'product_name.required' => '商品名は必須です。',
-            'product_name.string'   => '商品名は文字列で入力してください。',
-            'product_name.max'      => '商品名は255文字以内で入力してください。',
-            'company_id.required'   => 'メーカーを選択してください。',
-            'company_id.exists'     => '選択したメーカーは存在しません。',
-            'price.required'        => '価格は必須です。',
-            'price.integer'         => '価格は数値で入力してください。',
-            'price.min'             => '価格は0円以上を入力してください。',
-            'stock.required'        => '在庫数は必須です。',
-            'stock.integer'         => '在庫数は数値で入力してください。',
-            'stock.min'             => '在庫数は0以上を入力してください。',
-            'comment.string'        => 'コメントは文字列で入力してください。',
-            'comment.max'           => 'コメントは1万文字以内で入力してください。',
-            'img.image'             => '画像ファイルを選択してください。',
-            'img.mimes'             => '画像は jpg / jpeg / png / webp のいずれかでアップロードしてください。',
-            'img.max'               => '画像サイズは5MB以下にしてください。',
-        ];
-    }
 
     /* ===== 一覧 ===== */
     public function index(Request $request)
@@ -92,10 +58,11 @@ class ProductController extends Controller
         $product->save();
         DB::commit();
 
-        return redirect()->route('products.index')->with('success', '商品を登録しました。');
-    } catch (\Throwable $e) {
+        return redirect()->route('products.index')
+            ->with('success', '商品を登録しました。');
+    } catch (\Exception $e) {
         DB::rollBack();
-        return back()->withErrors(['error' => '商品登録に失敗しました。'])->withInput();
+        return back()->withErrors(['error' => '商品登録に失敗しました。']);
     }
 }
 
@@ -113,36 +80,33 @@ class ProductController extends Controller
         return view('products.edit', compact('product', 'companies'));
     }
 
-    /* ===== 更新（Step8で使用予定） ===== */
+    /* ===== 更新 ===== */
     public function update(ProductUpdateRequest $request, Product $product)
 {
     $validated = $request->validated();
 
     DB::beginTransaction();
     try {
+        // 画像差し替え
         if ($request->hasFile('img')) {
             if ($product->img_path) {
                 Storage::disk('public')->delete($product->img_path);
             }
-            $product->img_path = $request->file('img')->store('products', 'public');
+            $validated['img_path'] = $request->file('img')->store('products', 'public');
         }
 
-        $product->fill([
-            'product_name' => $validated['product_name'],
-            'company_id'   => $validated['company_id'],
-            'price'        => $validated['price'],
-            'stock'        => $validated['stock'],
-            'comment'      => $validated['comment'] ?? null,
-        ])->save();
+        $product->update($validated);
 
         DB::commit();
-        return redirect()->route('products.show', $product)->with('success', '商品を更新しました。');
-    } catch (\Throwable $e) {
+
+        return redirect()
+            ->route('products.show', $product)
+            ->with('success', '商品を更新しました。');
+    } catch (\Exception $e) {
         DB::rollBack();
-        return back()->withErrors(['error' => '商品更新に失敗しました。'])->withInput();
+        return back()->withErrors(['error' => '商品更新に失敗しました。']);
     }
 }
-
     /* ===== 削除 ===== */
     public function destroy(Product $product)
     {
