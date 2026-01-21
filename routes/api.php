@@ -1,7 +1,10 @@
 <?php
 
-use Illuminate\Http\Request;
+use App\Http\Controllers\Api\PurchaseController;
 use Illuminate\Support\Facades\Route;
+
+Route::post('/purchase', [\App\Http\Controllers\Api\PurchaseController::class, 'purchase']);
+Route::post('/purchase', [PurchaseController::class, 'store']);
 
 /*
 |--------------------------------------------------------------------------
