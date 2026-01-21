@@ -37,10 +37,6 @@ class ProductController extends Controller
         }
         $direction = ($direction === 'asc') ? 'asc' : 'desc';
 
-        $query->orderBy($sort, $direction);
-
-        $products = $query->paginate(10)->withQueryString();
-
         // 商品名
         if ($keyword !== '') {
             $query->where('product_name', 'like', "%{$keyword}%");
@@ -70,6 +66,12 @@ class ProductController extends Controller
         if ($stockMax !== null && $stockMax !== '') {
             $query->where('stock', '<=', (int)$stockMax);
         }
+
+        // ソート → 最後に実行する
+        $query->orderBy($sort, $direction);
+
+        // 一覧取得（ここで初めてSQLが実行される）
+        $products = $query->paginate(10)->withQueryString();
 
         $companies = Company::orderBy('company_name')->get();
 
